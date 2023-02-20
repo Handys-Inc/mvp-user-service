@@ -1,17 +1,17 @@
 require("dotenv").config();
-const createVerificationLink = require("../utilities/createVerification");
+const {createVerificationLink} = require("../utilities/createVerification");
 
 const SEND_GRID_API_KEY = process.env.SEND_GRID_KEY
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(SEND_GRID_API_KEY);
 
-function sendWelcomeEmail (userData, emailConfig) {
+
+function sendWelcomeEmail ({name, email}) {
 
     const msg = {
-        to: userData.name,
-        from: 'admin@handys.ca',
-        subject: 'Welcome to Handys',
-        text: 'To welcome you to Handys',
+        to: email,
+        from: 'sylvia@handys.ca',
+        subject: `Welcome to Handys, ${name}`,
         html: '<p>To welcome you to Handys</p>',
       };
 
@@ -28,22 +28,19 @@ function sendWelcomeEmail (userData, emailConfig) {
       })();
 };
 
-async function sendVerificationEmail (userData, authCode) {
+async function sendVerificationEmail (email, authCode) {
 
-    const verificationLink = createVerificationLink(userData.email)
+    const verificationLink = createVerificationLink(email)
 
     const link = verificationLink.resetLink;
 
+
     const msg = {
-        to: userData,
-        from: 'admin@handys.ca',
-        subject: 'Verify your email',
-        text: `We would like to verify your account. Please enter this four digit code in the application - ${authCode}`,
-        html: `<p>We would like to verify your account. Please enter this four digit code in the application - ${authCode}. 
-            Click this link to be redirected to the page ->
-            <a target="_blank" href="$${link}">Verify Email</a></p>
-            
-        </p>`
+        to: email,
+        //from: 'admin@handys.ca',
+        from: 'sylvia@handys.ca',
+        subject: 'Handys Email Verification Code',
+        html: `<p>We would like to verify your account. Please enter this four digit code in the application - ${authCode}. </p>`
       };
 
       (async () => {
@@ -62,8 +59,8 @@ async function sendVerificationEmail (userData, authCode) {
 
 };
 
-module.exports = sendWelcomeEmail;
-module.exports = sendVerificationEmail;
+module.exports.sendWelcomeEmail = sendWelcomeEmail;
+module.exports.sendVerificationEmail = sendVerificationEmail;
 
   
 

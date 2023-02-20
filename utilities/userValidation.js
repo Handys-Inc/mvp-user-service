@@ -1,6 +1,6 @@
 const Joi = require('joi');
 
-function validateUser(user) {
+function validateUser({user}) {
     const schema = Joi.object({
         firstName: Joi.string().min(2).max(150).required().label("First Name"),
         lastName: Joi.string().min(2).max(150).required().label("Last Name"),
@@ -16,7 +16,9 @@ function validateUser(user) {
                 }
             });
             return errors;
-        })
+        }),
+        phoneNumber: Joi.string().min(7).max(15).required().label("Phone Number").pattern(/^[0-9]+$/),
+        profilePicture: Joi.string().min(10).max(255).required().label("Profile Picture"),
     })
 }
 
@@ -31,7 +33,7 @@ function validateUserUpdate(user) {
     return schema.validate(user);
 }
 
-async function validateEmail(email) {
+async function validateEmail({email}) {
     const schema = Joi.object({
         email: Joi.string().min(5).max(150).required().email().error(errors => {
             errors.forEach(err => {
@@ -50,6 +52,26 @@ async function validateEmail(email) {
     return schema.validate(email);
 }
 
-module.exports.validate = validateUser;
+async function validateNumber({phoneNumber}) {
+    const schema = Joi.object({
+        phoneNumber: Joi.string().min(7).max(15).required().label("Phone Number").pattern(/^[0-9]+$/).error(errors => {
+            errors.forEach(err => {
+                switch (err.code) {
+                    case "string.phoneNumber":
+                        err.message = `Please enter a valid phone number`;
+                        break;
+                    default:
+                        break;
+                }
+            });
+            return errors;
+        })
+    });
+
+    return schema.validate(email);
+}
+
+module.exports.validateUser = validateUser;
 module.exports.validateEmail = validateEmail;
+module.exports.validateNumber = validateNumber;
 module.exports.validateUserUpdate = validateUserUpdate;

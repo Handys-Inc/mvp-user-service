@@ -2,6 +2,7 @@ const { User } = require("../models/user");
 const jwt = require('jsonwebtoken');
 require("dotenv").config();
 
+//const profilePicture = require('../assets/images/profile_picture.svg');
 
 async function hash(password) {
     const salt = await bcryptjs.genSalt(10);
@@ -11,6 +12,7 @@ async function hash(password) {
 
 async function createUser(body) {
     try {
+
         const user = new User({
             firstName: body.firstName.toLowerCase(),
             lastName: body.lastName.toLowerCase(),
@@ -18,7 +20,7 @@ async function createUser(body) {
             phoneNumber: body.phoneNumber,
             password: await hash(body.password),
             profilePicture: "",
-            userLevel: "user",
+            userLevel: "user", //user or admin
             userAccess: ["customer"], //["customer", "service"],
             status: "active",
             createdAt: Date.now,
@@ -42,35 +44,50 @@ async function addUserVerificationToken(id, token) {
     return user;
 }
 
-// async function sendNewTokens(user) {
-//     try {
-//        let userData = {
-//         //template: email_verification_template,
-//         name: `${user.firstName} ${user.lastName}`,
-//         email: user.email
-//        };
+async function sendNewTokens(user) {
+    try {
+       let userData = {
+        //template: email_verification_template,
+        name: `${user.firstName} ${user.lastName}`,
+        email: user.email
+       };
 
-//        const token = await user.generateAuthToken() + Date.now();
+       const token = await user.generateAuthToken() + Date.now();
 
-//        const verification = await crea
-//        meta = {
-//         "%CONFIRMATION_LINK%": config.get("verify_email") + "/" + token,
-//         "%FIRST_NAME%": user.firstName,
-//         "%EMAIL_ADDRESS%": user.email
-//         }
+       const verification = await crea
+       meta = {
+        "%CONFIRMATION_LINK%": config.get("verify_email") + "/" + token,
+        "%FIRST_NAME%": user.firstName,
+        "%EMAIL_ADDRESS%": user.email
+        }
 
-//         //await addUserVerificationToken(user._id, token);
-//         sendVerificationEmail(userData, meta);
+        //await addUserVerificationToken(user._id, token);
+        sendVerificationEmail(userData, meta);
     
-//     } catch (error) {
+    } catch (error) {
         
-//     }
-// }
+    }
+}
+
+async function generateLoginToken(user) {
+    const payload = {
+        name: `${user.firstName} ${user.lastName}`,
+        email: user.email,
+        exp: Math.floor(Date.now() / 1000) + (60 * 60), // expires in 1 hour
+      };
+      
+      const secret = process.env.JWT_KEY
+      const algorithm = 'ES256';
+      
+      const token = jwt.sign(payload, secret, { algorithm });
+
+    return token;
+}
 
 async function generateVerificationToken(email) {
     const payload = {
         email: email,
-        verified: false,
+        //verified: false,
         exp: Math.floor(Date.now() / 1000) + (60 * 60), // expires in 1 hour
       };
       
@@ -86,7 +103,7 @@ async function generateVerificationToken(email) {
 
 
 module.exports.createUser = createUser;
-//module.exports.sendNewTokens = sendNewTokens;
+module.exports.sendNewTokens = sendNewTokens;
 module.exports.addUserVerificationToken = addUserVerificationToken;
 module.exports.generateVerificationToken = generateVerificationToken;
 

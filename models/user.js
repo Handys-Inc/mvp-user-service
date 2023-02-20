@@ -26,9 +26,11 @@ const userSchema = new mongoose.Schema({
     },
     userLevel: {
         type: String
+        //'user','admin'
     },
     userAccess: {
         type: [String]
+        //'service','customer'
     },
     lastLogin: {
         type: Date

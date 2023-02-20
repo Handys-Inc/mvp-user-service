@@ -5,9 +5,9 @@ const userController = require('../controllers/users');
 const router = express.Router();
 
 router.post("/verify-email", userController.verifyEmail);
-router.post("/send-verification", userController.sendVerification);
-router.post("/", userController.createUser);
+router.post("/verify-number", userController.verifyNumber);
+router.post("/signup", userController.userSignup);
 router.post("/login", userController.userLogin);
-router.post("/create-existing-user", userController.createExistingUser);
+//router.post("/create-existing-user", userController.createExistingUser);
 
 module.exports = router;

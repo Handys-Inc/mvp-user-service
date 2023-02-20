@@ -7,60 +7,90 @@ const _ = require("lodash");
 const bcryptjs = require("bcryptjs");
 
 
-const { createUser, sendNewTokens } = require("../utilities/userAuthentication");
-const {sendVerificationEmail} = require('../utilities/email');
-const {generateAuthCode} = require('../utilities/createVerification');
-const {validateEmail} = require('../utilities/userValidation');
+const { createUser, sendNewTokens, generateVerificationToken } = require("../utilities/userAuthentication");
+const { sendVerificationEmail } = require('../utilities/email');
+const { sendVerificationText } = require('../utilities/sms');
+const { generateAuthCode } = require('../utilities/createVerification');
+const { validateEmail } = require('../utilities/userValidation');
 
+
+const verificationToken = '';
+const textVerificationToken = '';
 
 exports.verifyEmail = async (req, res, next) => {
-    console.log(req.body);
-    const { userEmail } = req.body;
-
-    const {error} = await validateEmail(userEmail);
+    const { email } = req.body;
+    const {error} = await validateEmail(email);
 
     if (error) return res.status(400).send(error.details[0].message);
 
         const authCode = await generateAuthCode();
+
+        verificationToken = await generateVerificationToken(email)
     
         //send email
-        await sendVerificationEmail(userEmail, authCode);
+        //await sendVerificationEmail(email, authCode);
 
-        return res
-        .status(200)
-        .send({userEmail, authCode});
+        //add token to db with email address
+        const user = await User.findOneAndUpdate(
+            { email: email },
+            { verificationToken: verificationToken },
+            { upsert: true, new: true }
+          );
+
+        return res.status(200).send({email, authCode});
 
 };
 
-exports.sendVerification =  async (req, res, next) => {
-    console.log("works")
+exports.verifyNumber = async (req, res, next) => {
+    const { phoneNumber } = req.body;
+    const {error} = await validateNumber(phoneNumber);
+
+    if (error) return res.status(400).send(error.details[0].message);
+
+        const authCode = await generateAuthCode();
+
+        //const token = await generateVerificationToken(email)
+    
+        //send sms
+        //await sendVerificationText(phoneNumber, authCode);
+
+        //add token to db with email address
+        const user = await User.findOneAndUpdate(
+            { phoneNumber: phoneNumber },
+            { verificationToken: authToken },
+            { upsert: true, new: true }
+          );
+
+        return res.status(200).send({phoneNumber, authCode});
+
 };
 
 
 //create user
-exports.createUser =  async (req, res) => {
-    const {error} = validate(req.body);
+exports.userSignup =  async (req, res) => {
+    const {error} = validateUser(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    let user = await User.findOne({email: req.body.email});
-    if (user) return res.status(400).send("User already registered.");
 
-    let user_exists = false;
-    if(!user_exists) {
-        user = await createUser(req.body);
+    const { firstName, lastName, email, password, token} = req.body;
 
-        if(user) {
-            await sendNewTokens(user);
-        }
+    const user = await User.findOne({ verificationToken: token });
 
+    if (!user) {
+        return res.status(400).json({ message: 'Invalid verification token' });
+    }
+    
+    user = await createUser(req.body);
+
+    if(user) {
+        await sendNewTokens(user);
         //send email
         sendWelcomeEmail({name: user.firstName + " " + user.lastName, email: user.email},);
-
-        return res
-            .status(200)
-            .send(_pick(user, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel"]));
     }
-};
+    
+    return res.status(200)
+            .send(_pick(user, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel"]));
+    };
 
 exports.userLogin =  async (req, res, next) => {
     //check email exists
@@ -74,25 +104,4 @@ exports.userLogin =  async (req, res, next) => {
         user.password
     );
     if (!validPassword) return res.status(400).send("The password provided is incorrect.");
-};
-
-exports.createExistingUser =  async (req, res, next) => {
-    let user = await User.findOne({email: req.body.email});
-    if (user) return res.status(400).send("user already registered");
-
-    user = await createExistingUser(req.body);
-    return res.status(200).send(user);
-};
-
-async function createUserEmailToken(body){
-    try {
-        let email = body.email;
-        const userExists = await User.findOne({email: email});
-        if(userExists) {
-
-        }
-        
-    } catch (error) {
-        
-    }
 };
