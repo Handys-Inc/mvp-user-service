@@ -68,7 +68,7 @@ async function validateNumber({phoneNumber}) {
         })
     });
 
-    return schema.validate(email);
+    return schema.validate(phoneNumber);
 }
 
 module.exports.validateUser = validateUser;

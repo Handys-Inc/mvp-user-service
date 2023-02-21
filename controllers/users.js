@@ -11,7 +11,7 @@ const { createUser, sendNewTokens, generateVerificationToken } = require("../uti
 const { sendVerificationEmail } = require('../utilities/email');
 const { sendVerificationText } = require('../utilities/sms');
 const { generateAuthCode } = require('../utilities/createVerification');
-const { validateEmail } = require('../utilities/userValidation');
+const { validateEmail, validateNumber, validateUser } = require('../utilities/userValidation');
 
 
 const verificationToken = '';
@@ -43,9 +43,9 @@ exports.verifyEmail = async (req, res, next) => {
 
 exports.verifyNumber = async (req, res, next) => {
     const { phoneNumber } = req.body;
-    const {error} = await validateNumber(phoneNumber);
+    // const {error} = await validateNumber(phoneNumber);
 
-    if (error) return res.status(400).send(error.details[0].message);
+    // if (error) return res.status(400).send(error.details[0].message);
 
         const authCode = await generateAuthCode();
 
@@ -54,10 +54,10 @@ exports.verifyNumber = async (req, res, next) => {
         //send sms
         //await sendVerificationText(phoneNumber, authCode);
 
-        //add token to db with email address
+        //add token to db with phone number
         const user = await User.findOneAndUpdate(
             { phoneNumber: phoneNumber },
-            { verificationToken: authToken },
+            { verificationToken: authCode },
             { upsert: true, new: true }
           );
 
