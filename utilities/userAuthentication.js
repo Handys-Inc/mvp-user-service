@@ -44,30 +44,30 @@ async function addUserVerificationToken(id, token) {
     return user;
 }
 
-async function sendNewTokens(user) {
-    try {
-       let userData = {
-        //template: email_verification_template,
-        name: `${user.firstName} ${user.lastName}`,
-        email: user.email
-       };
+// async function sendNewTokens(user) {
+//     try {
+//        let userData = {
+//         //template: email_verification_template,
+//         name: `${user.firstName} ${user.lastName}`,
+//         email: user.email
+//        };
 
-       const token = await user.generateAuthToken() + Date.now();
+//        const token = await user.generateAuthToken() + Date.now();
 
-       const verification = await crea
-       meta = {
-        "%CONFIRMATION_LINK%": config.get("verify_email") + "/" + token,
-        "%FIRST_NAME%": user.firstName,
-        "%EMAIL_ADDRESS%": user.email
-        }
+//        const verification = await crea
+//        meta = {
+//         "%CONFIRMATION_LINK%": config.get("verify_email") + "/" + token,
+//         "%FIRST_NAME%": user.firstName,
+//         "%EMAIL_ADDRESS%": user.email
+//         }
 
-        //await addUserVerificationToken(user._id, token);
-        sendVerificationEmail(userData, meta);
+//         //await addUserVerificationToken(user._id, token);
+//         sendVerificationEmail(userData, meta);
     
-    } catch (error) {
+//     } catch (error) {
         
-    }
-}
+//     }
+// }
 
 async function generateLoginToken(user) {
     const payload = {
@@ -97,13 +97,49 @@ async function generateVerificationToken(email) {
       const token = jwt.sign(payload, secret, { algorithm });
 
     return token;
+};
+
+async function generateResetToken({user}) {
+    const payload = {
+        email: user.email,
+        id: user._id,
+        exp: Math.floor(Date.now() / 1000) + (60 * 60),
+    }
+
+    const secret = `${process.env.JWT_KEY} ${user.password}`
+    const algorithm = 'ES256';
+      
+    const token = jwt.sign(payload, secret, { algorithm });
+
+    return token;
+}
+
+async function createResetLink (token) {
+    const resetLink = `${process.env.APP_URL}/reset-password/${token}`;
+    return {resetLink, token};
+
+}
+
+async function updateUserPassword (id, newPassword) {
+    try {
+        const user = await User.updateOne({
+            $and: [{_id: id}]
+        }, {$set: {password: await hash(newPassword)}});
+        return user;
+    } catch (error) {
+        console.log('unable to create new password ', error );
+    }
 }
 
 
 
 
 module.exports.createUser = createUser;
-module.exports.sendNewTokens = sendNewTokens;
+//module.exports.sendNewTokens = sendNewTokens;
 module.exports.addUserVerificationToken = addUserVerificationToken;
+module.exports.generateLoginToken = generateLoginToken;
 module.exports.generateVerificationToken = generateVerificationToken;
+module.exports.generateResetToken = generateResetToken;
+module.exports.createResetLink = createResetLink;
+module.exports.updateUserPassword = updateUserPassword;
 

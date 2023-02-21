@@ -7,7 +7,8 @@ const _ = require("lodash");
 const bcryptjs = require("bcryptjs");
 
 
-const { createUser, sendNewTokens, generateVerificationToken } = require("../utilities/userAuthentication");
+const { createUser, sendNewTokens, generateVerificationToken, generateLoginToken, generateResetToken, createResetLink, updateUserPassword } = require("../utilities/userAuthentication");
+const { getUser } = require("../utilities/users");
 const { sendVerificationEmail } = require('../utilities/email');
 const { sendVerificationText } = require('../utilities/sms');
 const { generateAuthCode } = require('../utilities/createVerification');
@@ -83,7 +84,7 @@ exports.userSignup =  async (req, res) => {
     user = await createUser(req.body);
 
     if(user) {
-        await sendNewTokens(user);
+        //await sendNewTokens(user);
         //send email
         sendWelcomeEmail({name: user.firstName + " " + user.lastName, email: user.email},);
     }
@@ -104,4 +105,87 @@ exports.userLogin =  async (req, res, next) => {
         user.password
     );
     if (!validPassword) return res.status(400).send("The password provided is incorrect.");
+
+    if(user.status !== 'active') return res.status(401).send("This account is inactive");
+
+    //last login
+    await User.findByIdAndUpdate(user._id, {
+        $set: {
+            'lastLogin': new Date()
+        }
+    });
+
+    const token = await generateLoginToken(user);
+    return res.header("x-auth-token", token).status(200).send(token);
+    
 };
+
+exports.getUserAccount = async (req, res, next) => {
+    const user = req.user_id;
+
+    let isValid = mongoose.Types.ObjectId.isValid(user);
+    if (!isValid) return res.status(400).send("Invalid user id");
+
+    const userDetails = await getUser(req.params.id);
+
+    return res.status(200).send(_.pick(userDetails, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel", "status"]))
+};
+
+exports.forgotPassword = async (req, res, next) => {
+    const { email } = req.body;
+    const {error} = await validateEmail(email);
+
+    if (error) return res.status(400).send(error.details[0].message);
+
+    let user = null;
+    if (email) {
+        user = await User.findOne({email: req.body.email.toLowerCase()});
+        if (!user) return res.status(404).send("The provided email does not belong to any Handys account.");
+    }
+    const token = generateResetToken(user);
+
+    //update user with password change token
+    user = await User.updateOne({$and: [{_id: id}]}, {
+        $set: {
+            passwordChangeToken: token
+        }
+    });
+
+    const resetLink = createResetLink(token);
+
+    sendPasswordResetEmail(email, resetLink);
+    
+    return res.status(200).send("You will receive an email if the email address entered exists in our systems");
+}
+
+exports.resetPassword = async (req, res, next) => {
+    const user = await User.findOne({$and: [{passwordChangeToken: req.body.token}]});
+
+    if (!user) return res.status(404).send("Password channge not found");
+
+    await updateUserPassword(user._id, req.body.password);
+
+    user = await User.updateOne({$and: [{_id: id}]}, {
+        $set: {
+            passwordChangeToken: null
+        }
+    });
+
+    return res.status(200).send("Password reset was successful");
+}
+
+exports.updateUserPassword = async (req, res, next) => {
+    try {
+        if (!req.params.id) return res.status(400).send("Invalid user id");
+
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).send("User account not found.");
+        if (!await bcryptjs.compare(req.body.currentPassword, user.password)) return res.status(400).send("Current password is incorrect.");
+
+        const updatedUser = await updateUserPassword(req.params.id, req.body.newPassword);
+        return res.status(200).send("Password update was successful");
+    } catch (error) {
+        return res.status(500).send(error.message)
+    }
+}
+

@@ -63,6 +63,9 @@ const userSchema = new mongoose.Schema({
         email: {
             type: Boolean
         },
+        number: {
+            type: Boolean
+        }
     }
 });
 
