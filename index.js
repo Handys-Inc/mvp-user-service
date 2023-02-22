@@ -25,7 +25,7 @@ app.options("*", cors());
 
 const userRoutes = require('./routes/users');
 
-app.get("/api", (req, res, next) => { return res.status(200).json({message: "Welcome to Handys User Service"})});
+app.get("/", (req, res, next) => { return res.status(200).json({message: "Welcome to Handys User Service"})});
 app.use("/api/users", userRoutes);
 
 const port = process.env.PORT || 5000 ;

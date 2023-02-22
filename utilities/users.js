@@ -3,7 +3,7 @@ const { User } = require("../models/user");
 
 async function getUser (id) {
     try {
-        const user = await User.findOne(id)
+        const user = await User.findOne({$and: [{id, status: "active"}]})
         .select({
             _id: 1,
             firstName: 1,

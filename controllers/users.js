@@ -96,7 +96,7 @@ exports.userSignup =  async (req, res) => {
 exports.userLogin =  async (req, res, next) => {
     //check email exists
     let user = null;
-    if (req.body.email) user = await User.findOne({email: req.body.email.toLowerCase()});
+    if (req.body.email) user = await User.findOne({$and: [{email: req.body.email.toLowerCase(), status: "active"}]});
     if (!user) return res.status(404).send("The provided email does not belong to any Handys account.");
 
 
@@ -139,7 +139,7 @@ exports.forgotPassword = async (req, res, next) => {
 
     let user = null;
     if (email) {
-        user = await User.findOne({email: req.body.email.toLowerCase()});
+        user = await User.findOne({$and: [{email: req.body.email.toLowerCase(), status:"active"}]});
         if (!user) return res.status(404).send("The provided email does not belong to any Handys account.");
     }
     const token = generateResetToken(user);
@@ -159,7 +159,7 @@ exports.forgotPassword = async (req, res, next) => {
 }
 
 exports.resetPassword = async (req, res, next) => {
-    const user = await User.findOne({$and: [{passwordChangeToken: req.body.token}]});
+    const user = await User.findOne({$and: [{passwordChangeToken: req.body.token, status:"active"}]});
 
     if (!user) return res.status(404).send("Password channge not found");
 
@@ -189,3 +189,76 @@ exports.updateUserPassword = async (req, res, next) => {
     }
 }
 
+exports.updateUserNumber = async (req, res, next) => {
+    try {
+        if (!req.params.id) return res.status(400).send("Invalid user id");
+        if (!req.body.phoneNumber || req.body.phoneNumber.length < 1) return res.status(400).send("Phone Number is required.");
+
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).send("User account not found.");
+
+        const numberCheck = await User.findOne({phoneNumber: req.body.phoneNumber});
+        if (numberCheck && numberCheck._id.toString() !== req.params.id) return res.status(400).send("The provided number already belongs to another account.");
+
+        const updatedNumber = await User.updateOne({_id: req.params.id}, {
+            phoneNumber: req.body.phoneNumber
+        }, {new: true});
+
+
+        return res.status(200).send({
+            message: 'Phone numuber update was successful',
+            data: _.pick(userDetails, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel", "status"])
+        })
+    } catch (error) {
+        return res.status(500).send(error.message)
+    }
+}
+
+
+exports.updateUserEmail = async (req, res, next) => {
+    try {
+        if (!req.params.id) return res.status(400).send("Invalid user id");
+        if (!req.body.email || req.body.email.length < 1) return res.status(400).send("Email is required.");
+
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).send("User account not found.");
+
+        const emailCheck = await User.findOne({email: req.body.email});
+        if (emailCheck && emailCheck._id.toString() !== req.params.id) return res.status(400).send("The provided email already belongs to another account.");
+
+        const updatedUser = await User.updateOne({_id: req.params.id}, {
+            email: req.body.email.toLowerCase()
+        }, {new: true});
+
+        const userDetails = await getUser(req.params.id);
+
+        return res.status(200).send({
+            message: 'Email update was successful',
+            data: _.pick(userDetails, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel", "status"])
+        })
+    } catch (error) {
+        return res.status(500).send(error.message)
+    }
+}
+
+exports.deactivateAccount = async (req, res, next) => {
+    try {
+        if (!req.params.id) return res.status(400).send("Invalid user id");
+
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).send("User account not found.");
+
+        // const activeCheck = await User.findOne({$and: [{_id: req.params.id, status: "active"}]});
+        // if (!activeCheck) return res.status(400).send("The accpunt is inactive");
+
+        const updatedUser = await User.updateOne({_id: req.params.id}, {
+            $set: {
+                status: "inactive"
+            }
+        });
+
+        return res.status(200).send('Account deactivated');
+    } catch (error) {
+        return res.status(500).send(error.message)
+    }
+}
