@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const session = require('express-session');
+
 
 const app = express();
 require("dotenv").config();
@@ -27,6 +29,12 @@ const userRoutes = require('./routes/users');
 
 app.get("/", (req, res, next) => { return res.status(200).json({message: "Welcome to Handys User Service"})});
 app.use("/api/users", userRoutes);
+
+app.use(session({
+  secret: process.env.JWT_KEY,
+  resave: false,
+  saveUninitialized: false
+}));
 
 const port = process.env.PORT || 5000 ;
 

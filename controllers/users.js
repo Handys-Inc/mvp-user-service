@@ -15,8 +15,8 @@ const { generateAuthCode } = require('../utilities/createVerification');
 const { validateEmail, validateNumber, validateUser } = require('../utilities/userValidation');
 
 
-const verificationToken = '';
-const textVerificationToken = '';
+let verificationToken = '';
+let textVerificationToken = '';
 
 exports.verifyEmail = async (req, res, next) => {
     const { email } = req.body;

@@ -77,26 +77,33 @@ async function generateLoginToken(user) {
       };
       
       const secret = process.env.JWT_KEY
-      const algorithm = 'ES256';
+      //const algorithm = 'ES256';
       
-      const token = jwt.sign(payload, secret, { algorithm });
+      const token = jwt.sign(payload, secret);
 
     return token;
 }
 
 async function generateVerificationToken(email) {
-    const payload = {
-        email: email,
-        //verified: false,
-        exp: Math.floor(Date.now() / 1000) + (60 * 60), // expires in 1 hour
-      };
-      
-      const secret = process.env.JWT_KEY
-      const algorithm = 'ES256';
-      
-      const token = jwt.sign(payload, secret, { algorithm });
-
-    return token;
+    try {
+        const payload = {
+            email: email,
+            //verified: false,
+            exp: Math.floor(Date.now() / 1000) + (60 * 60), // expires in 1 hour
+          };
+          
+          const secret = process.env.JWT_KEY
+          //const algorithm = 'ES256';
+          
+          //const token = jwt.sign(payload, secret, { algorithm });
+          const token = jwt.sign(payload, secret);
+    
+        return token;
+        
+    } catch (error) {
+        console.log(error);
+    }
+    
 };
 
 async function generateResetToken({user}) {
@@ -107,9 +114,9 @@ async function generateResetToken({user}) {
     }
 
     const secret = `${process.env.JWT_KEY} ${user.password}`
-    const algorithm = 'ES256';
+    //const algorithm = 'ES256';
       
-    const token = jwt.sign(payload, secret, { algorithm });
+    const token = jwt.sign(payload, secret);
 
     return token;
 }
