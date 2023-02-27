@@ -4,6 +4,7 @@ const { User } = require("../models/user");
 
 
 const _ = require("lodash");
+const mongoose = require("mongoose");
 const bcryptjs = require("bcryptjs");
 
 
@@ -69,28 +70,28 @@ exports.verifyNumber = async (req, res, next) => {
 
 //create user
 exports.userSignup =  async (req, res) => {
-    const {error} = validateUser(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
+    // const {error} = validateUser(req.body);
+    // if (error) return res.status(400).send(error.details[0].message);
 
 
     const { firstName, lastName, email, password, token} = req.body;
 
-    const user = await User.findOne({ verificationToken: token });
+    let user = await User.findOne({ verificationToken: token });
 
     if (!user) {
         return res.status(400).json({ message: 'Invalid verification token' });
     }
-    
-    user = await createUser(req.body);
 
-    if(user) {
-        //await sendNewTokens(user);
-        //send email
-        sendWelcomeEmail({name: user.firstName + " " + user.lastName, email: user.email},);
-    }
+    let updatedUser = await createUser(user, {firstName, lastName, password});
+
+    // if(user) {
+    //     //await sendNewTokens(user);
+    //     //send email
+    //     sendWelcomeEmail({name: user.firstName + " " + user.lastName, email: user.email},);
+    // }
     
     return res.status(200)
-            .send(_pick(user, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel"]));
+            .send(_.pick(updatedUser, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel"]));
     };
 
 exports.userLogin =  async (req, res, next) => {
@@ -121,8 +122,7 @@ exports.userLogin =  async (req, res, next) => {
 };
 
 exports.getUserAccount = async (req, res, next) => {
-    const user = req.user_id;
-
+    const user = req.user._id;
     let isValid = mongoose.Types.ObjectId.isValid(user);
     if (!isValid) return res.status(400).send("Invalid user id");
 
@@ -142,30 +142,37 @@ exports.forgotPassword = async (req, res, next) => {
         user = await User.findOne({$and: [{email: req.body.email.toLowerCase(), status:"active"}]});
         if (!user) return res.status(404).send("The provided email does not belong to any Handys account.");
     }
-    const token = generateResetToken(user);
+
+    const token = await generateResetToken(user);
 
     //update user with password change token
-    user = await User.updateOne({$and: [{_id: id}]}, {
+    let updateUserPasswordToken = await User.updateOne({$and: [{_id: user._id}]}, {
         $set: {
             passwordChangeToken: token
         }
     });
 
-    const resetLink = createResetLink(token);
+    const resetLink = await createResetLink(token);
 
-    sendPasswordResetEmail(email, resetLink);
+    //sendPasswordResetEmail(email, resetLink);
     
-    return res.status(200).send("You will receive an email if the email address entered exists in our systems");
+    return res.status(200).json({
+        "message":"You will receive an email if the email address entered exists in our systems",
+        "resetToken": token
+    });
 }
 
 exports.resetPassword = async (req, res, next) => {
-    const user = await User.findOne({$and: [{passwordChangeToken: req.body.token, status:"active"}]});
+    const user = await User.findOne({$and: [{passwordChangeToken: req.body.passwordResetToken, status:"active"}]});
 
-    if (!user) return res.status(404).send("Password channge not found");
+    if (!user) return res.status(404).send("Password change not found");
 
-    await updateUserPassword(user._id, req.body.password);
+    let userId = user._id.toString();
 
-    user = await User.updateOne({$and: [{_id: id}]}, {
+    await updateUserPassword(userId, req.body.password);
+
+    //remove password change token
+    let updatedPassword = await User.updateOne({$and: [{_id: userId}]}, {
         $set: {
             passwordChangeToken: null
         }

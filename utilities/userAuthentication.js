@@ -1,31 +1,40 @@
 const { User } = require("../models/user");
 const jwt = require('jsonwebtoken');
+const bcryptjs = require('bcryptjs');
 require("dotenv").config();
-
-//const profilePicture = require('../assets/images/profile_picture.svg');
 
 async function hash(password) {
     const salt = await bcryptjs.genSalt(10);
     const hashed = await bcryptjs.hash(password, salt);
     return hashed;
-}
+};
 
-async function createUser(body) {
+async function createUser(user, {firstName, lastName, email, password}) {
     try {
 
-        const user = new User({
-            firstName: body.firstName.toLowerCase(),
-            lastName: body.lastName.toLowerCase(),
-            email: body.email.toLowerCase(),
-            phoneNumber: body.phoneNumber,
-            password: await hash(body.password),
-            profilePicture: "",
-            userLevel: "user", //user or admin
-            userAccess: ["customer"], //["customer", "service"],
-            status: "active",
-            createdAt: Date.now,
-            authType: 'email',
-        });
+        const now = new Date();
+
+        user.firstName = firstName;
+        user.lastName = lastName;
+        user.password = await hash(password);
+        user.userLevel= "user"; //user or admin
+        user.userAccess= ["customer"]; //["customer", "service"],
+        user.status= "active";
+
+
+        // const user = new User({
+        //     firstName: body.firstName.toLowerCase(),
+        //     lastName: body.lastName.toLowerCase(),
+        //     email: body.email.toLowerCase(),
+        //     phoneNumber: body.phoneNumber,
+        //     password: await hash(body.password),
+        //     profilePicture: "",
+        //     userLevel: "user", //user or admin
+        //     userAccess: ["customer"], //["customer", "service"],
+        //     status: "active",
+        //     createdAt: now,
+        //     authType: 'email',
+        // });
 
         await user.save();
         return user
@@ -71,6 +80,7 @@ async function addUserVerificationToken(id, token) {
 
 async function generateLoginToken(user) {
     const payload = {
+        _id: user._id,
         name: `${user.firstName} ${user.lastName}`,
         email: user.email,
         exp: Math.floor(Date.now() / 1000) + (60 * 60), // expires in 1 hour
@@ -106,7 +116,8 @@ async function generateVerificationToken(email) {
     
 };
 
-async function generateResetToken({user}) {
+async function generateResetToken(user) {
+    console.log(user);
     const payload = {
         email: user.email,
         id: user._id,
@@ -123,7 +134,7 @@ async function generateResetToken({user}) {
 
 async function createResetLink (token) {
     const resetLink = `${process.env.APP_URL}/reset-password/${token}`;
-    return {resetLink, token};
+    return {resetLink};
 
 }
 

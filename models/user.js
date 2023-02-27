@@ -56,7 +56,7 @@ const userSchema = new mongoose.Schema({
     },
     authType: {
         type: String,
-        enum: ['google'],
+        enum: ['google','email','facebook'],
         default: 'email'
     },
     verified: {
