@@ -10,7 +10,7 @@ function sendWelcomeEmail ({name, email}) {
 
     const msg = {
         to: email,
-        from: 'sylvia@handys.ca',
+        from: 'work@handys.ca',
         subject: `Welcome to Handys, ${name}`,
         html: '<p>To welcome you to Handys</p>',
       };
@@ -37,8 +37,7 @@ async function sendVerificationEmail (email, authCode) {
 
     const msg = {
         to: email,
-        //from: 'admin@handys.ca',
-        from: 'sylvia@handys.ca',
+        from: 'work@handys.ca',
         subject: 'Handys Email Verification Code',
         html: `<p>We would like to verify your account. Please enter this four digit code in the application - ${authCode}. </p>`
       };
@@ -64,8 +63,7 @@ async function sendPasswordResetEmail (email, resetLink) {
 
   const msg = {
       to: email,
-      //from: 'admin@handys.ca',
-      from: 'sylvia@handys.ca',
+      from: 'work@handys.ca',
       subject: 'Handys Password Reset',
       html: `<p>You have requested a link to reset your password. Click the link below to change your password:
       <br>
