@@ -29,8 +29,8 @@ const userSchema = new mongoose.Schema({
         //'user','admin'
     },
     userAccess: {
-        type: [String]
-        //'service','customer'
+        type: [String],
+        enum: ['service','customer'],
     },
     lastLogin: {
         type: Date

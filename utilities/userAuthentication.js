@@ -9,7 +9,7 @@ async function hash(password) {
     return hashed;
 };
 
-async function createUser(user, {firstName, lastName, email, password}) {
+async function createUser(user, {firstName, lastName, email, password, userAccess}) {
     try {
 
         const now = new Date();
@@ -18,9 +18,9 @@ async function createUser(user, {firstName, lastName, email, password}) {
         user.lastName = lastName;
         user.password = await hash(password);
         user.userLevel= "user"; //user or admin
-        user.userAccess= ["customer"]; //["customer", "service"],
+        user.userAccess.push(userAccess); //["customer", "service"],
+       // user.userAccess= ["customer"]; 
         user.status= "active";
-
 
         // const user = new User({
         //     firstName: body.firstName.toLowerCase(),
