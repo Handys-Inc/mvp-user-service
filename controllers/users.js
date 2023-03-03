@@ -35,43 +35,21 @@ exports.verifyEmail = async (req, res, next) => {
         //add token to db with email address
         const user = await User.findOneAndUpdate(
             { email: email },
-            { verificationToken: verificationToken },
+            { verificationToken: authCode },
             { upsert: true, new: true }
           );
 
         //return res.status(200).send({email, authCode});
         return res.status(200).send({
-            message: "Verification email sent"
+            message: "Verification email sent",
+            authCode: authCode
         });
 
 };
 
-exports.verifyCode = async (req, res, next) => {
-    const { verificationToken } = req.body;
-
-    const isValid = await User.findOne({ verificationToken: verificationToken });
-
-    if (!isValid) {
-        return res.status(400).json({ message: 'Invalid verification token' });
-    }
-    else {
-
-        const isVerified = await User.updateOne({$and: [{_id: isValid._id}]}, {
-            $set: {
-                'verified.email' : true
-            }
-        });
-
-        return res.json({
-            message: "Token verified"
-        });
-    }
-}
-
 exports.verifyNumber = async (req, res, next) => {
     const { phoneNumber } = req.body;
     // const {error} = await validateNumber(phoneNumber);
-
     // if (error) return res.status(400).send(error.details[0].message);
 
         const authCode = await generateAuthCode();
@@ -88,9 +66,35 @@ exports.verifyNumber = async (req, res, next) => {
             { upsert: true, new: true }
           );
 
-        return res.status(200).send({phoneNumber, authCode});
+        //return res.status(200).send({phoneNumber, authCode});
+
+        return res.status(200).send({
+            message: "Verification message sent",
+            authCode: authCode
+        });
 
 };
+
+exports.verifyCode = async (req, res, next) => {
+    const { verificationToken } = req.body;
+
+    const isValid = await User.findOne({ verificationToken: verificationToken });
+
+    if (!isValid) {
+        return res.status(400).json({ message: 'Invalid verification token' });
+    }
+    else {
+        const isVerified = await User.updateOne({$and: [{_id: isValid._id}]}, {
+            $set: {
+                'verified.email' : true
+            }
+        });
+
+        return res.json({
+            message: "Token verified"
+        });
+    }
+}
 
 
 //create user
@@ -98,9 +102,9 @@ exports.userSignup =  async (req, res) => {
     // const {error} = validateUser(req.body);
     // if (error) return res.status(400).send(error.details[0].message);
 
-    const { firstName, lastName, email, password, userAccess, token} = req.body;
+    const { firstName, lastName, email, password, userAccess} = req.body;
 
-    let user = await User.findOne({ verificationToken: token });
+    let user = await User.findOne({$and: [{email: email, 'verified.email': true}]  });
 
     if (!user) {
         return res.status(400).json({ message: 'Invalid verification token' });
