@@ -7,6 +7,7 @@ const router = express.Router();
 
 router.post("/verify-email", userController.verifyEmail);
 router.post("/verify-number", userController.verifyNumber);
+router.post("/verify-code", userController.verifyCode);
 router.post("/signup", userController.userSignup);
 router.post("/login", userController.userLogin);
 router.get("/user/:id", auth, userController.getUserAccount);
