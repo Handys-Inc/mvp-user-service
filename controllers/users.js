@@ -10,7 +10,7 @@ const bcryptjs = require("bcryptjs");
 
 const { createUser, sendNewTokens, generateVerificationToken, generateLoginToken, generateResetToken, createResetLink, updateUserPassword } = require("../utilities/userAuthentication");
 const { getUser } = require("../utilities/users");
-const { sendVerificationEmail } = require('../utilities/email');
+const { sendVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail } = require('../utilities/email');
 const { sendVerificationText } = require('../utilities/sms');
 const { generateAuthCode } = require('../utilities/createVerification');
 const { validateEmail, validateNumber, validateUser } = require('../utilities/userValidation');
@@ -96,7 +96,6 @@ exports.verifyCode = async (req, res, next) => {
     }
 }
 
-
 //create user
 exports.userSignup =  async (req, res) => {
     // const {error} = validateUser(req.body);
@@ -115,7 +114,7 @@ exports.userSignup =  async (req, res) => {
     if(user) {
         //await sendNewTokens(user);
         //send email
-        sendWelcomeEmail({name: user.firstName + " " + user.lastName, email: user.email},);
+       await sendWelcomeEmail({name: user.firstName + " " + user.lastName, email: user.email},);
     }
     
     return res.status(200)
@@ -182,7 +181,7 @@ exports.forgotPassword = async (req, res, next) => {
 
     const resetLink = await createResetLink(token);
 
-    sendPasswordResetEmail(email, resetLink);
+    await sendPasswordResetEmail(email, resetLink);
     
     return res.status(200).json({
         "message":"You will receive an email if the email address entered exists in our systems",
