@@ -58,18 +58,6 @@ async function sendPasswordResetEmail (email, resetLink) {
       <a target="_blank" href="${resetLink}">Reset Password</a></p>>`
     };
 
-    // (async () => {
-    //   try {
-    //     await sgMail.send(msg);
-    //   } catch (error) {
-    //     console.error(error);
-    
-    //     if (error.response) {
-    //       console.error(error.response.body)
-    //     }
-    //   }
-    // })();
-
     try {
       const response = await sgMail.send(msg);
       console.log('Email sent successfully with message ID:', response[0].messageId);
