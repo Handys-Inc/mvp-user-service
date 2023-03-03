@@ -1,13 +1,13 @@
 require("dotenv").config();
 const {createVerificationLink} = require("../utilities/createVerification");
 
-const SEND_GRID_API_KEY = process.env.SEND_GRID_KEY
+const SEND_GRID_API_KEY = process.env.SEND_GRID_API_KEY
+//SEND_GRID_KEY
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(SEND_GRID_API_KEY);
 
 
-function sendWelcomeEmail ({name, email}) {
-
+async function sendWelcomeEmail ({name, email}) {
     const msg = {
         to: email,
         from: 'work@handys.ca',
@@ -15,26 +15,19 @@ function sendWelcomeEmail ({name, email}) {
         html: '<p>To welcome you to Handys</p>',
       };
 
-    (async () => {
-        try {
-          await sgMail.send(msg);
-        } catch (error) {
-          console.error(error);
-      
-          if (error.response) {
-            console.error(error.response.body)
-          }
-        }
-      })();
+      try {
+        const response = await sgMail.send(msg);
+        //console.log('Email sent successfully');
+        console.log('Email sent successfully with message ID:', response[0].messageId);
+        return response[0].messageId;
+      } catch (error) {
+        console.error(error);
+      }
 };
 
 async function sendVerificationEmail (email, authCode) {
-
-    const verificationLink = createVerificationLink(email)
-
-    const link = verificationLink.resetLink;
-
-
+    // const verificationLink = await createVerificationLink(email)
+    // const link = verificationLink.resetLink;
     const msg = {
         to: email,
         from: 'work@handys.ca',
@@ -42,24 +35,19 @@ async function sendVerificationEmail (email, authCode) {
         html: `<p>We would like to verify your account. Please enter this four digit code in the application - ${authCode}. </p>`
       };
 
-      (async () => {
-        try {
-          await sgMail.send(msg);
-        } catch (error) {
-          console.error(error);
-      
-          if (error.response) {
-            console.error(error.response.body)
-          }
-        }
-      })();
+      try {
+        const response = await sgMail.send(msg);
+        console.log('Email sent successfully with message ID:', response[0].messageId);
+        return response[0].messageId;
+      } catch (error) {
+        console.error(error);
+      }
 
-      return verificationLink.token;
+      //return verificationLink.token;
 
 };
 
 async function sendPasswordResetEmail (email, resetLink) {
-
 
   const msg = {
       to: email,
@@ -70,17 +58,25 @@ async function sendPasswordResetEmail (email, resetLink) {
       <a target="_blank" href="${resetLink}">Reset Password</a></p>>`
     };
 
-    (async () => {
-      try {
-        await sgMail.send(msg);
-      } catch (error) {
-        console.error(error);
+    // (async () => {
+    //   try {
+    //     await sgMail.send(msg);
+    //   } catch (error) {
+    //     console.error(error);
     
-        if (error.response) {
-          console.error(error.response.body)
-        }
-      }
-    })();
+    //     if (error.response) {
+    //       console.error(error.response.body)
+    //     }
+    //   }
+    // })();
+
+    try {
+      const response = await sgMail.send(msg);
+      console.log('Email sent successfully with message ID:', response[0].messageId);
+      //return response[0].messageId;
+    } catch (error) {
+      console.error(error);
+    }
 
     return verificationLink.token;
 
