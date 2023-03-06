@@ -39,7 +39,10 @@ app.use(session({
 const port = process.env.PORT || 5000 ;
 
 mongoose
-  .connect(process.env.MONGO_DB)
+  .connect(process.env.MONGO_DB, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  })
   .then(result => {
     app.listen(port, () => console.log(`Express started on port ${port}`));
   })
