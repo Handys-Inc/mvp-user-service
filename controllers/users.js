@@ -16,9 +16,6 @@ const { generateAuthCode } = require('../utilities/createVerification');
 const { validateEmail, validateNumber, validateUser } = require('../utilities/userValidation');
 
 
-let verificationToken = '';
-let textVerificationToken = '';
-
 exports.verifyEmail = async (req, res, next) => {
     const { email } = req.body;
     const {error} = await validateEmail(email);
@@ -109,17 +106,26 @@ exports.userSignup =  async (req, res) => {
         return res.status(400).json({ message: 'Invalid verification token' });
     }
 
-    let updatedUser = await createUser(user, {firstName, lastName, password, userAccess});
-
     if(user) {
         //await sendNewTokens(user);
         //send email
        await sendWelcomeEmail({name: user.firstName + " " + user.lastName, email: user.email},);
     }
-    
-    return res.status(200)
+
+    try {
+        let updatedUser = await createUser(user, {firstName, lastName, password, userAccess});
+
+        if(updatedUser) {
+            return res.status(200)
             .send(_.pick(updatedUser, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel"]));
-    };
+        }
+        else {
+            return res.status(400).send("User signup failed");
+        }  
+    } catch (error) {
+        console.log(error);
+    }
+};
 
 exports.userLogin =  async (req, res, next) => {
     //check email exists
