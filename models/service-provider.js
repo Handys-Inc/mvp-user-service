@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const serviceProviderSchema = new mongoose({
+const serviceProviderSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
         required: true
@@ -51,4 +51,8 @@ const serviceProviderSchema = new mongoose({
         }
     ]
     
-})
+});
+
+const ServiceProvider = mongoose.model('ServiceProvider', serviceProviderSchema);
+
+module.exports.ServiceProvider = ServiceProvider;
