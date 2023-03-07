@@ -26,9 +26,11 @@ app.use((req, res, next) => {
 app.options("*", cors());
 
 const userRoutes = require('./routes/users');
+const serviceProviderRoutes = require('./routes/service-providers');
 
 app.get("/", (req, res, next) => { return res.status(200).json({message: "Welcome to Handys User Service"})});
 app.use("/api/users", userRoutes);
+app.use("/api/service-providers", serviceProviderRoutes);
 
 app.use(session({
   secret: process.env.JWT_KEY,
