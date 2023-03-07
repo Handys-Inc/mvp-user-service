@@ -28,6 +28,27 @@ const serviceProviderSchema = new mongoose({
     availability: {
         start: { type: Date, required: true },
         end: { type: Date }
-    }
+    },
+    profilePicture: {
+        type: String
+    },
+    userIDImages: [
+        {
+            type: String,
+            description: String
+        }
+    ],
+    insuranceImage: [
+        {
+            type: String,
+            description: String
+        }
+    ], 
+    completedJobsImages: [
+        {
+            type: String,
+            description: String
+        }
+    ]
     
 })
