@@ -19,7 +19,6 @@ async function createUser(user, {firstName, lastName, email, password, userAcces
         user.password = await hash(password);
         user.userLevel= "user"; //user or admin
         user.userAccess.push(userAccess); //["customer", "service"],
-       // user.userAccess= ["customer"]; 
         user.status= "active";
 
         // const user = new User({
