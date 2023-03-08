@@ -17,9 +17,9 @@ const upload = multer({
 router.post("/onboarding/legal-agreement", auth, serviceProviderController.legalConsent);
 router.post("/onboarding/job-profile", auth, serviceProviderController.jobProfile);
 router.post("/onboarding/upload-profile-picture", auth, upload.single('profilePicture'), serviceProviderController.uploadProfilePicture);
-router.post("/onboarding/upload-id-card", auth, upload.array('images'), serviceProviderController.uploadIDCard);
-router.post("/onboarding/upload-completed-jobs", auth, upload.array('images'), serviceProviderController.uploadCompletedJobs);
-router.post("/onboarding/upload-insurance", auth, upload.array('images'), serviceProviderController.uploadInsurance);
+router.post("/onboarding/upload-id-card", auth, upload.array('idCard'), serviceProviderController.uploadIDCard);
+router.post("/onboarding/upload-completed-jobs", auth, upload.array('completedJobs'), serviceProviderController.uploadCompletedJobs);
+router.post("/onboarding/upload-insurance", auth, upload.array('insurance'), serviceProviderController.uploadInsurance);
 router.post("/onboarding/finish-setup", auth, serviceProviderController.finishSetup);
 
 

@@ -1,10 +1,10 @@
 const express = require("express");
-const router = express.Router();
 const { ServiceProvider } = require("../models/service-provider");
 const { User } = require("../models/user");
 
 const _ = require("lodash");
 const mongoose = require("mongoose");
+const cloudinary = require('cloudinary').v2;
 
 
 exports.legalConsent = async (req, res) => {
@@ -59,17 +59,18 @@ exports.jobProfile = async (req, res) => {
 
 exports.uploadProfilePicture = async (req, res) => {
     const userId = req.user._id;
+
     const file = req.file;
     const filename = `profile_picture_${userId.toString()}`;
     try {
         //save image to cloudinary
         const options = { public_id: filename}
-        const res = await cloudinary.uploader.upload(file.path, options)
+        const cloudinaryResponse = await cloudinary.uploader.upload(file.path, options)
         
-        const user = await ServiceProvider.findById(userId);
+        const user = await ServiceProvider.findOne({user: userId});
 
         try {
-            user.profilePicture = res.secure_url;
+            user.profilePicture = cloudinaryResponse.secure_url;
             await user.save();
             res.status(200).send("User profile picture added");
         } catch (error) {
@@ -82,6 +83,7 @@ exports.uploadProfilePicture = async (req, res) => {
 
 exports.uploadIDCard = async (req, res) => {
     const userId = req.user._id;
+
     const files = req.files;
     const filename = `idCard_${userId.toString()}`;
     try {
@@ -89,15 +91,13 @@ exports.uploadIDCard = async (req, res) => {
        const images = await Promise.all(
         files.map( async (file) => {
             const options = { public_id: filename};
-            const res = await cloudinary.uploader.upload(file.path, options);
-            return {
-                url: res.secure_url,
-                description: 'User ID'
-            };
+            const cloudinaryResponse = await cloudinary.uploader.upload(file.path, options);
+            
+            return cloudinaryResponse.secure_url ;
         })
        ); 
 
-       const user = await ServiceProvider.findById(userId);
+       const user = await ServiceProvider.findOne({user: userId});
 
        try {
             user.userIDImages.push(...images);
@@ -113,6 +113,7 @@ exports.uploadIDCard = async (req, res) => {
 
 exports.uploadCompletedJobs = async (req, res) => {
     const userId = req.user._id;
+
     const files = req.files;
 
     const filename = `completedJobs_${userId.toString()}`;
@@ -121,16 +122,13 @@ exports.uploadCompletedJobs = async (req, res) => {
        const images = await Promise.all(
         files.map( async (file) => {
             const options = { public_id: filename};
-            const res = await cloudinary.uploader.upload(file.path, options);
+            const cloudinaryResponse = await cloudinary.uploader.upload(file.path, options);
 
-            return {
-                url: res.secure_url,
-                description: 'Completed jobs'
-            };
+            return cloudinaryResponse.secure_url;
         })
        ); 
 
-       const user = await ServiceProvider.findById(userId);
+       const user = await ServiceProvider.findOne({user: userId});
 
        try {
             user.completedJobsImages.push(...images);
@@ -147,6 +145,7 @@ exports.uploadCompletedJobs = async (req, res) => {
 
 exports.uploadInsurance = async (req, res) => {
     const userId = req.user._id;
+
     const files = req.files;
 
     const filename = `insurance_${userId.toString()}`;
@@ -155,16 +154,13 @@ exports.uploadInsurance = async (req, res) => {
        const images = await Promise.all(
         files.map( async (file) => {
             const options = { public_id: filename};
-            const res = await cloudinary.uploader.upload(file.path, options);
+            const cloudinaryResponse = await cloudinary.uploader.upload(file.path, options);
 
-            return {
-                url: res.secure_url,
-                description: 'Insurance'
-            };
+            return cloudinaryResponse.secure_url;
         })
        ); 
 
-       const user = await ServiceProvider.findById(userId);
+       const user = await ServiceProvider.findOne({user: userId});
 
        try {
             user.insuranceImage.push(...images);
