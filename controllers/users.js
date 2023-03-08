@@ -142,6 +142,7 @@ exports.userLogin =  async (req, res, next) => {
 
     if(user.status !== 'active') return res.status(401).send("This account is inactive");
 
+    const token = await generateLoginToken(user);
     //last login
     let updatedUser = await User.findByIdAndUpdate(user._id, {
         $set: {
@@ -149,12 +150,12 @@ exports.userLogin =  async (req, res, next) => {
         },
     }, { new: true });
 
-    const token = await generateLoginToken(user);
+    updatedUser.token = token;
+
+    
     return res.header("x-auth-token", token)
               .status(200)
-              .send({
-                token: token, 
-                user: _.pick(updatedUser, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel"])});
+              .send( _.pick(updatedUser, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel", "token"]));
 };
 
 exports.getUserAccount = async (req, res, next) => {
