@@ -16,32 +16,49 @@ const { generateAuthCode } = require('../utilities/createVerification');
 const { validateEmail, validateNumber, validateUser } = require('../utilities/userValidation');
 
 
+async function userVerification(email) {
+    const authCode = await generateAuthCode();
+    verificationToken = await generateVerificationToken(email)
+
+     //send email
+    await sendVerificationEmail(email, authCode);
+
+    //add token to db with email address
+    const user = await User.findOneAndUpdate(
+        { email: email },
+        { verificationToken: authCode },
+        { upsert: true, new: true }
+      );
+
+    return authCode;
+}
+
 exports.verifyEmail = async (req, res, next) => {
     const { email } = req.body;
-    const {error} = await validateEmail(email);
+    const { error } = await validateEmail(email);
 
     if (error) return res.status(400).send(error.details[0].message);
 
-        const authCode = await generateAuthCode();
+    let userVerified = await User.findOne({$and: [{email: email, 'verified.email': true}] });
+    if (userVerified) return res.status(400).send("User email already exists and is verified");
 
-        verificationToken = await generateVerificationToken(email)
-    
-        //send email
-        await sendVerificationEmail(email, authCode);
+    let userExists = await User.findOne({$and: [{email: email}] });
+    if (userExists) {
+        let authCode = await userVerification(email);
 
-        //add token to db with email address
-        const user = await User.findOneAndUpdate(
-            { email: email },
-            { verificationToken: authCode },
-            { upsert: true, new: true }
-          );
+        return res.status(400).send({
+            message: "User email already exists, but not verified. Sending an email to verify user.",
+            authCode: authCode
+        });
+    }
+    else {
+        let authCode = await userVerification(email);
 
-        //return res.status(200).send({email, authCode});
         return res.status(200).send({
             message: "Verification email sent",
             authCode: authCode
         });
-
+    }
 };
 
 exports.verifyNumber = async (req, res, next) => {
@@ -95,25 +112,25 @@ exports.verifyCode = async (req, res, next) => {
 
 //create user
 exports.userSignup =  async (req, res) => {
-    // const {error} = validateUser(req.body);
-    // if (error) return res.status(400).send(error.details[0].message);
-
     const { firstName, lastName, email, password, userAccess} = req.body;
 
-    let user = await User.findOne({$and: [{email: email, 'verified.email': true}]  });
-
-    if (!user) {
-        return res.status(400).json({ message: 'Invalid verification token' });
+    let userExists = await User.findOne({$and: [{email: email}]});
+    if (!userExists) {
+        return res.status(400).json({ message: 'User does not exist.' });
     }
 
-    if(user) {
-        //await sendNewTokens(user);
-        //send email
-       await sendWelcomeEmail({name: user.firstName + " " + user.lastName, email: user.email},);
+    let userVerified = await User.findOne({$and: [{email: email, 'verified.email': true}]});
+    if (!userVerified) {
+        return res.status(400).json({ message: 'User not verified for signup.' });
+    }
+
+    if(userVerified) {
+       //send email
+       await sendWelcomeEmail({name: firstName + " " + lastName, email: email},);
     }
 
     try {
-        let updatedUser = await createUser(user, {firstName, lastName, password, userAccess});
+        let updatedUser = await createUser(userVerified, {firstName, lastName, password, userAccess});
 
         if(updatedUser) {
             return res.status(200)
@@ -151,6 +168,11 @@ exports.userLogin =  async (req, res, next) => {
     }, { new: true });
 
     updatedUser.token = token;
+
+    //if user is a service provider add other details
+    if (updatedUser.userAccess.includes('service')){
+        updatedUser = await User.findById(user._id).populate('user');
+    }
 
     
     return res.header("x-auth-token", token)

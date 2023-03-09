@@ -64,7 +64,7 @@ exports.uploadProfilePicture = async (req, res) => {
     const filename = `profile_picture_${userId.toString()}`;
     try {
         //save image to cloudinary
-        const options = { public_id: filename}
+        const options = { public_id: filename, folder: 'profile-pictures'}
         const cloudinaryResponse = await cloudinary.uploader.upload(file.path, options)
         
         const user = await ServiceProvider.findOne({user: userId});
@@ -90,7 +90,7 @@ exports.uploadIDCard = async (req, res) => {
         //save all images to cloudinary
        const images = await Promise.all(
         files.map( async (file) => {
-            const options = { public_id: filename};
+            const options = { public_id: filename, folder: 'id-cards'};
             const cloudinaryResponse = await cloudinary.uploader.upload(file.path, options);
             
             return cloudinaryResponse.secure_url ;
@@ -121,7 +121,7 @@ exports.uploadCompletedJobs = async (req, res) => {
     try {
        const images = await Promise.all(
         files.map( async (file) => {
-            const options = { public_id: filename};
+            const options = { public_id: filename, folder: 'completed-jobs'};
             const cloudinaryResponse = await cloudinary.uploader.upload(file.path, options);
 
             return cloudinaryResponse.secure_url;
@@ -153,7 +153,7 @@ exports.uploadInsurance = async (req, res) => {
     try {
        const images = await Promise.all(
         files.map( async (file) => {
-            const options = { public_id: filename};
+            const options = { public_id: filename, folder: 'insurance'};
             const cloudinaryResponse = await cloudinary.uploader.upload(file.path, options);
 
             return cloudinaryResponse.secure_url;
