@@ -1,9 +1,11 @@
 const mongoose = require('mongoose');
+const User = require("./user"); //User model
 
 const serviceProviderSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
-        required: true
+        required: true,
+        ref: 'User'
     },
     consent: {
         type: Boolean
