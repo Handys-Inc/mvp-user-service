@@ -80,8 +80,6 @@ exports.verifyNumber = async (req, res, next) => {
             { upsert: true, new: true }
           );
 
-        //return res.status(200).send({phoneNumber, authCode});
-
         return res.status(200).send({
             message: "Verification message sent",
             authCode: authCode
@@ -159,7 +157,7 @@ exports.userLogin =  async (req, res, next) => {
 
     if(user.status !== 'active') return res.status(401).send("This account is inactive");
 
-    const token = await generateLoginToken(user);
+    let token = await generateLoginToken(user);
     //last login
     let updatedUser = await User.findByIdAndUpdate(user._id, {
         $set: {
@@ -173,7 +171,6 @@ exports.userLogin =  async (req, res, next) => {
     if (updatedUser.userAccess.includes('service')){
         updatedUser = await User.findById(user._id).populate('user');
     }
-
     
     return res.header("x-auth-token", token)
               .status(200)
@@ -283,7 +280,6 @@ exports.updateUserNumber = async (req, res, next) => {
     }
 }
 
-
 exports.updateUserEmail = async (req, res, next) => {
     const user_id = req.user._id.toString();
     try {
@@ -332,4 +328,15 @@ exports.deactivateAccount = async (req, res, next) => {
     } catch (error) {
         return res.status(500).send(error.message)
     }
+}
+
+exports.refreshToken = async (req, res, next) => {
+    const user = req.user._id;
+
+    let token = await generateLoginToken(user);
+
+    return res.status(200).send({
+        message: "Here's your new token",
+        token: token
+    });
 }

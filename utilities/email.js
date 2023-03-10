@@ -42,9 +42,6 @@ async function sendVerificationEmail (email, authCode) {
       } catch (error) {
         console.error(error);
       }
-
-      //return verificationLink.token;
-
 };
 
 async function sendPasswordResetEmail (email, resetLink) {
@@ -65,9 +62,6 @@ async function sendPasswordResetEmail (email, resetLink) {
     } catch (error) {
       console.error(error);
     }
-
-    return verificationLink.token;
-
 };
 
 module.exports.sendWelcomeEmail = sendWelcomeEmail;
