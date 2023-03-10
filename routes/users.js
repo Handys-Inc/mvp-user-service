@@ -17,5 +17,6 @@ router.post("/reset-password/:id", auth, userController.updateUserPassword);
 router.post("/update-email/:id", auth, userController.updateUserEmail);
 router.post("/update-number/:id", auth, userController.updateUserNumber);
 router.post("/deactivate/:id", auth, userController.deactivateAccount);
+router.post("/refresh-token", auth, userController.refreshToken);
 
 module.exports = router;

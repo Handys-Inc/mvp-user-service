@@ -52,31 +52,6 @@ async function addUserVerificationToken(id, token) {
     return user;
 }
 
-// async function sendNewTokens(user) {
-//     try {
-//        let userData = {
-//         //template: email_verification_template,
-//         name: `${user.firstName} ${user.lastName}`,
-//         email: user.email
-//        };
-
-//        const token = await user.generateAuthToken() + Date.now();
-
-//        const verification = await crea
-//        meta = {
-//         "%CONFIRMATION_LINK%": config.get("verify_email") + "/" + token,
-//         "%FIRST_NAME%": user.firstName,
-//         "%EMAIL_ADDRESS%": user.email
-//         }
-
-//         //await addUserVerificationToken(user._id, token);
-//         sendVerificationEmail(userData, meta);
-    
-//     } catch (error) {
-        
-//     }
-// }
-
 async function generateLoginToken(user) {
     const payload = {
         _id: user._id,
@@ -86,9 +61,10 @@ async function generateLoginToken(user) {
       };
       
       const secret = process.env.JWT_KEY
-      //const algorithm = 'ES256';
+      const expiresIn = payload.exp;
       
       const token = jwt.sign(payload, secret);
+      //const token = jwt.sign({...payload, expiresIn: payload.exp}, secret);
 
     return token;
 }
@@ -102,11 +78,11 @@ async function generateVerificationToken(email) {
           };
           
           const secret = process.env.JWT_KEY
-          //const algorithm = 'ES256';
+          //const expiresIn = payload.exp;
           
-          //const token = jwt.sign(payload, secret, { algorithm });
           const token = jwt.sign(payload, secret);
-    
+          //const token = jwt.sign({...payload, expiresIn: payload.exp}, secret);
+
         return token;
         
     } catch (error) {
@@ -116,7 +92,6 @@ async function generateVerificationToken(email) {
 };
 
 async function generateResetToken(user) {
-    console.log(user);
     const payload = {
         email: user.email,
         id: user._id,
@@ -124,17 +99,17 @@ async function generateResetToken(user) {
     }
 
     const secret = `${process.env.JWT_KEY} ${user.password}`
-    //const algorithm = 'ES256';
+    //const expiresIn = payload.exp;
       
     const token = jwt.sign(payload, secret);
+    //const token = jwt.sign({...payload, expiresIn: payload.exp}, secret);
 
     return token;
 }
 
 async function createResetLink (token) {
-    const resetLink = `${process.env.APP_URL}/reset-password/${token}`;
-    return {resetLink};
-
+    const resetLink = `${process.env.STAGING_URL}/reset-password/${token}`;
+    return resetLink;
 }
 
 async function updateUserPassword (id, newPassword) {
@@ -152,7 +127,6 @@ async function updateUserPassword (id, newPassword) {
 
 
 module.exports.createUser = createUser;
-//module.exports.sendNewTokens = sendNewTokens;
 module.exports.addUserVerificationToken = addUserVerificationToken;
 module.exports.generateLoginToken = generateLoginToken;
 module.exports.generateVerificationToken = generateVerificationToken;
