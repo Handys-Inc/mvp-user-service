@@ -177,7 +177,7 @@ exports.userLogin =  async (req, res, next) => {
     
     return res.header("x-auth-token", token)
               .status(200)
-              .send( _.pick(updatedUser, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel", "token"]));
+              .send( _.pick(updatedUser, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel", "token", "createdAt"]));
 };
 
 exports.getUserAccount = async (req, res, next) => {
