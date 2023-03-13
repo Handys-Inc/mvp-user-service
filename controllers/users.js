@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { User } = require("../models/user");
+const { ServiceProvider } = require("../models/service-provider");
 
 
 const _ = require("lodash");
@@ -169,12 +170,13 @@ exports.userLogin =  async (req, res, next) => {
 
     //if user is a service provider add other details
     if (updatedUser.userAccess.includes('service')){
-        updatedUser = await User.findById(user._id).populate('user');
+        //updatedUser = await User.findById(user._id).populate('user');
+        updatedUser.serviceProvider = await ServiceProvider.findOne({user: updatedUser._id});
     }
     
     return res.header("x-auth-token", token)
               .status(200)
-              .send( _.pick(updatedUser, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel", "token", "createdAt"]));
+              .send( _.pick(updatedUser, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel", "serviceProvider", "token", "createdAt"]));
 };
 
 exports.getUserAccount = async (req, res, next) => {
@@ -184,7 +186,13 @@ exports.getUserAccount = async (req, res, next) => {
 
     const userDetails = await getUser(req.params.id);
 
-    return res.status(200).send(_.pick(userDetails, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel", "status"]))
+     //if user is a service provider add other details
+     if (userDetails.userAccess.includes('service')){
+        //updatedUser = await User.findById(user._id).populate('user');
+        userDetails.serviceProvider = await ServiceProvider.findOne({user: userDetails._id});
+    }
+
+    return res.status(200).send(_.pick(userDetails, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel", "status", "serviceProvider"]))
 };
 
 exports.forgotPassword = async (req, res, next) => {
