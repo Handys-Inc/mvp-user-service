@@ -186,7 +186,13 @@ exports.getUserAccount = async (req, res, next) => {
 
     const userDetails = await getUser(req.params.id);
 
-    return res.status(200).send(_.pick(userDetails, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel", "status"]))
+     //if user is a service provider add other details
+     if (userDetails.userAccess.includes('service')){
+        //updatedUser = await User.findById(user._id).populate('user');
+        userDetails.serviceProvider = await ServiceProvider.findOne({user: userDetails._id});
+    }
+
+    return res.status(200).send(_.pick(userDetails, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel", "status", "serviceProvider"]))
 };
 
 exports.forgotPassword = async (req, res, next) => {
