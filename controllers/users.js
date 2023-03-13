@@ -131,9 +131,13 @@ exports.userSignup =  async (req, res) => {
     try {
         let updatedUser = await createUser(userVerified, {firstName, lastName, password, userAccess});
 
+        let token = await generateLoginToken(updatedUser);
+
+        updatedUser.token = token;
+
         if(updatedUser) {
             return res.status(200)
-            .send(_.pick(updatedUser, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel"]));
+            .send(_.pick(updatedUser, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel", "token"]));
         }
         else {
             return res.status(400).send("User signup failed");
