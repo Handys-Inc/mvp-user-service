@@ -133,11 +133,15 @@ exports.userSignup =  async (req, res) => {
 
         let token = await generateLoginToken(updatedUser);
 
-        updatedUser.token = token;
+        let timestamp = token.expiresIn;
+        let dateObj = new Date(timestamp * 1000);
+
+        updatedUser.token = token.token;
+        updatedUser.expiresIn = dateObj;
 
         if(updatedUser) {
             return res.status(200)
-            .send(_.pick(updatedUser, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel", "token"]));
+            .send(_.pick(updatedUser, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel", "token", "expiresIn"]));
         }
         else {
             return res.status(400).send("User signup failed");
@@ -163,6 +167,10 @@ exports.userLogin =  async (req, res, next) => {
     if(user.status !== 'active') return res.status(401).send("This account is inactive");
 
     let token = await generateLoginToken(user);
+
+    let timestamp = token.expiresIn;
+    let dateObj = new Date(timestamp * 1000);
+
     //last login
     let updatedUser = await User.findByIdAndUpdate(user._id, {
         $set: {
@@ -170,7 +178,8 @@ exports.userLogin =  async (req, res, next) => {
         },
     }, { new: true });
 
-    updatedUser.token = token;
+    updatedUser.token = token.token;
+    updatedUser.expiresIn = dateObj;
 
     //if user is a service provider add other details
     if (updatedUser.userAccess.includes('service')){
@@ -180,7 +189,7 @@ exports.userLogin =  async (req, res, next) => {
     
     return res.header("x-auth-token", token)
               .status(200)
-              .send( _.pick(updatedUser, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel", "serviceProvider", "token", "createdAt"]));
+              .send( _.pick(updatedUser, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePicture", "userAccess", "userLevel", "serviceProvider", "token", "expiresIn", "createdAt"]));
 };
 
 exports.getUserAccount = async (req, res, next) => {

@@ -1,4 +1,3 @@
-const express = require("express");
 const { ServiceProvider } = require("../models/service-provider");
 const { User } = require("../models/user");
 
