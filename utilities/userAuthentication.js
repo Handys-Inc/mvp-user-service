@@ -66,7 +66,7 @@ async function generateLoginToken(user) {
       const token = jwt.sign(payload, secret);
       //const token = jwt.sign({...payload, expiresIn: payload.exp}, secret);
 
-    return token;
+    return {token, expiresIn};
 }
 
 async function generateVerificationToken(email) {
